@@ -3,8 +3,8 @@ clone:
   depth: full
 
 pipelines:
-  branches:
-    master:
+  custom: # Tato sekce se nespouští automaticky při pushi
+    mirror-via-webhook: # Název, který použijeme v API volání
       - step:
           name: Mirror to GitHub (master)
           script:
