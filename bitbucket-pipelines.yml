@@ -4,9 +4,9 @@ clone:
 
 pipelines:
   branches:
-      master:
-        - step:
-            name: Mirror to GitHub (master)
-            script:
-              - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
-              - git push --mirror github
+    master:
+      - step:
+          name: Mirror to GitHub (master)
+          script:
+            - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
+            - git push --mirror github
