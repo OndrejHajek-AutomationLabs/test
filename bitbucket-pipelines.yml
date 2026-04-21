@@ -5,7 +5,18 @@ pipelines:
   custom:
     mirror-via-webhook:
       - step:
-          name: Mirror to GitHub (master)
+          name: Mirror to GitHub (only on master)
           script:
+            # Zjisti aktuální větev
+            - CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            - echo "Running on branch: $CURRENT_BRANCH"
+
+            # Pokud to není master → ukonči pipeline
+            - if [ "$CURRENT_BRANCH" != "master" ]; then
+                echo "Not on master branch. Exiting.";
+                exit 0;
+              fi
+
+            # Pokud je to master → proveď mirror
             - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
             - git push --mirror github
