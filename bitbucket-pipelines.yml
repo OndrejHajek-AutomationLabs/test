@@ -1,10 +1,9 @@
-# Nastavení úplného stažení historie pro zrcadlení
 clone:
   depth: full
 
 pipelines:
-  custom: # Tato sekce se nespouští automaticky při pushi
-    mirror-via-webhook: # Název, který použijeme v API volání
+  custom:
+    mirror-via-webhook:
       - step:
           name: Mirror to GitHub (master)
           script:
