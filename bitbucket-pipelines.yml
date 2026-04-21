@@ -3,11 +3,10 @@ clone:
   depth: full
 
 pipelines:
-  default:
-    - step:
-        name: Mirror to GitHub
-        script:
-          # Přidání GitHubu jako druhého remote
-          - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
-          # Nahrání všech větví a tagů (zrcadlení)
-          - git push --mirror github
+  branches:
+      master:
+        - step:
+            name: Mirror to GitHub (master)
+            script:
+              - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
+              - git push --mirror github
