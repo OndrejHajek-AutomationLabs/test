@@ -7,17 +7,15 @@ pipelines:
       - step:
           name: Mirror to GitHub (master, squash since last mirror)
           script:
-            # Jen na masteru
+            # Branch control
             - CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
             - '[ "$CURRENT_BRANCH" = "master" ] || { echo "Not on master branch. Exiting."; exit 0; }'
 
-            # Přidáme GitHub remote
+            # Add GitHub remote
             - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
 
-            # Stáhneme tagy z GitHubu (pokud existují)
+            # Local tag download
             - git fetch github --tags || true
-
-            # Pokud tag mirror-last neexistuje, vytvoříme ho z origin/master
             - git fetch origin master
             - |
               if [ -z "$(git ls-remote --tags github mirror-last)" ]; then
@@ -26,34 +24,34 @@ pipelines:
                 git push github mirror-last
               fi
 
-            # Stáhneme tag lokálně
+            # Local update
             - git fetch github --tags
             - BASE=$(git rev-parse mirror-last)
 
-            # Vytvoříme dočasnou větev pro mirror
+            # Create of tem branch
             - git checkout master
             - git checkout -b ssgh-mirror-squash
 
-            # Squash commitů od posledního mirror push
+            # Squash commits
             - git reset --soft "$BASE"
 
-            # Pokud není co commitnout, mirror se přeskočí
+            # Only for new commits
             - |
               if git diff --cached --quiet; then
                 echo "No new commits since last mirror push. Skipping mirror."
                 exit 0
               fi
 
-            # Vytvoříme squashed commit
+            # Squashed commit
             - git commit -m "Squashed commits since last mirror push"
 
-            # Push squashed větve jako master do GitHubu
+            # Push squashed commits to GitHub
             - git push github ssgh-mirror-squash:master --force
 
-            # Aktualizace tagu mirror-last
+            # Update mirror-last tag
             - git tag -f mirror-last ssgh-mirror-squash
             - git push github -f mirror-last
 
-            # Úklid
+            # Clean
             - git checkout master
             - git branch -D ssgh-mirror-squash
