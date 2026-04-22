@@ -5,41 +5,53 @@ pipelines:
   custom:
     mirror-via-webhook:
       - step:
-          name: Mirror to GitHub (only on master)
+          name: Mirror to GitHub (master, squash since last mirror)
           script:
+            # Jen na masteru
             - CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
             - '[ "$CURRENT_BRANCH" = "master" ] || { echo "Not on master branch. Exiting."; exit 0; }'
 
-            # Fetch origin
-            - git fetch origin master
-
             # Přidáme GitHub remote
             - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
-            - git fetch github --tags
 
+            # Stáhneme tagy z GitHubu (pokud existují)
+            - git fetch github --tags || true
+
+            # Pokud tag mirror-last neexistuje, vytvoříme ho z origin/master
+            - git fetch origin master
             - |
               if [ -z "$(git ls-remote --tags github mirror-last)" ]; then
-                echo "mirror-last tag not found on GitHub, creating initial tag"
+                echo "mirror-last tag not found on GitHub, creating initial tag from origin/master"
                 git tag mirror-last origin/master
                 git push github mirror-last
-              fi  
+              fi
 
-            # Vytvoříme dočasnou větev z origin/master
-            - git checkout origin/master -b ssgh-mirror-squash
-
-            # Najdeme commit posledního mirroru
+            # Stáhneme tag lokálně
             - git fetch github --tags
             - BASE=$(git rev-parse mirror-last)
 
+            # Vytvoříme dočasnou větev pro mirror
+            - git checkout master
+            - git checkout -b ssgh-mirror-squash
+
             # Squash commitů od posledního mirror push
-            - git reset --soft $BASE
+            - git reset --soft "$BASE"
+
+            # Pokud není co commitnout, mirror se přeskočí
+            - |
+              if git diff --cached --quiet; then
+                echo "No new commits since last mirror push. Skipping mirror."
+                exit 0
+              fi
+
+            # Vytvoříme squashed commit
             - git commit -m "Squashed commits since last mirror push"
 
-            # Mirror do GitHubu
+            # Push squashed větve jako master do GitHubu
             - git push github ssgh-mirror-squash:master --force
 
-            # Aktualizace tagu mirror-last na nový stav
-            - git tag -f mirror-last master
+            # Aktualizace tagu mirror-last
+            - git tag -f mirror-last ssgh-mirror-squash
             - git push github -f mirror-last
 
             # Úklid
