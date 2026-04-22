@@ -9,5 +9,38 @@ pipelines:
           script:
             - CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
             - '[ "$CURRENT_BRANCH" = "master" ] || { echo "Not on master branch. Exiting."; exit 0; }'
+
+            # Fetch origin
+            - git fetch origin master
+
+            # Přidáme GitHub remote
             - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
-            - git push --mirror github
+            - git fetch github --tags
+
+            # Pokud tag mirror-last neexistuje na GitHubu, vytvoříme ho
+            - if ! git rev-parse github/mirror-last >/dev/null 2>&1; then \
+                echo "mirror-last tag not found on GitHub, creating initial tag"; \
+                git tag mirror-last origin/master; \
+                git push github mirror-last; \
+              fi
+
+            # Vytvoříme dočasnou větev z origin/master
+            - git checkout origin/master -b ssgh-mirror-squash
+
+            # Najdeme commit posledního mirroru
+            - BASE=$(git rev-parse github/mirror-last)
+
+            # Squash commitů od posledního mirror push
+            - git reset --soft $BASE
+            - git commit -m "Squashed commits since last mirror push"
+
+            # Mirror do GitHubu
+            - git push github ssgh-mirror-squash:master --force
+
+            # Aktualizace tagu mirror-last na nový stav
+            - git tag -f mirror-last master
+            - git push github -f mirror-last
+
+            # Úklid
+            - git checkout master
+            - git branch -D ssgh-mirror-squash
