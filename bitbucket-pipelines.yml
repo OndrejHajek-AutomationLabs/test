@@ -17,12 +17,12 @@ pipelines:
             - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
             - git fetch github --tags
 
-            # Kontrola existence tagu na GitHubu
-            - if [ -z "$(git ls-remote --tags github mirror-last)" ]; then \
-                echo "mirror-last tag not found on GitHub, creating initial tag"; \
-                git tag mirror-last origin/master; \
-                git push github mirror-last; \
-              fi
+            - |
+              if [ -z "$(git ls-remote --tags github mirror-last)" ]; then
+                echo "mirror-last tag not found on GitHub, creating initial tag"
+                git tag mirror-last origin/master
+                git push github mirror-last
+              fi  
 
             # Vytvoříme dočasnou větev z origin/master
             - git checkout origin/master -b ssgh-mirror-squash
