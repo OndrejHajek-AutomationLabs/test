@@ -17,8 +17,8 @@ pipelines:
             - git remote add github git@github.com:OndrejHajek-AutomationLabs/test.git
             - git fetch github --tags
 
-            # Pokud tag mirror-last neexistuje na GitHubu, vytvoříme ho
-            - if ! git rev-parse github/mirror-last >/dev/null 2>&1; then \
+            # Kontrola existence tagu na GitHubu
+            - if [ -z "$(git ls-remote --tags github mirror-last)" ]; then \
                 echo "mirror-last tag not found on GitHub, creating initial tag"; \
                 git tag mirror-last origin/master; \
                 git push github mirror-last; \
