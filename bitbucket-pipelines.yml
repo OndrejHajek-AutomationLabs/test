@@ -28,7 +28,8 @@ pipelines:
             - git checkout origin/master -b ssgh-mirror-squash
 
             # Najdeme commit posledního mirroru
-            - BASE=$(git rev-parse github/mirror-last)
+            - git fetch github --tags
+            - BASE=$(git rev-parse mirror-last)
 
             # Squash commitů od posledního mirror push
             - git reset --soft $BASE
